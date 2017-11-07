@@ -2,7 +2,6 @@ require 'rest-client'
 require 'openssl'
 require 'base64'
 require 'json'
-#require 'URI'
 
 # locally:
 # cp VMW.rb /usr/share/ruby/2.0.0/
@@ -11,9 +10,9 @@ module VMW
 
 class API
   
-  @@username = 'fritz'
-  @@password = 'VMware1!'
-  @@tenant = 'qe'
+  @@username = nil
+  @@password = nil 
+  @@tenant = nil
 
   @@apiKey = nil
   @@apiSecret = nil

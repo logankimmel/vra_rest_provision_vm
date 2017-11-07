@@ -5,18 +5,16 @@ $LOAD_PATH.unshift(libdir) unless $LOAD_PATH.include?(libdir)
 require 'VMWConfig'
 require 'irb'
 
-# Request the vRA 'centos' blueprint
-blueprintName = "ubuntu"
+# Request the vRA 'ubuntu' blueprint
 businessGroup = "Development"
 numCpus = 1
 customizationSpec = "Linux"
 
 if ARGV[0]
   blueprintName = ARGV[0]
-end
-
-if ARGV[1]
-  numCpus = ARGV[1]
+else
+  puts "Blueprint name required as argument"
+  exit 1
 end
 
 catalogItemId = nil
@@ -157,6 +155,8 @@ begin
 
   # # Write results to a file
   # File.open("ip_address", "w").write(ip_address)
+
+exit 0
 
 rescue RestClient::Exception => e
   print "Got exception with status: %d\n" % e.response.code

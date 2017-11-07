@@ -6,7 +6,7 @@
 - sudo gem install nokogiri
 - The following environment variables are required:
 
-`VRA_USER` , `VRA_PASSWORD` , `VRA_TENANT` , `VRA_ENDPOINT`
+`VRA_USER` , `VRA_PASSWORD` , `VRA_TENANT` , `VRA_ENDPOINT` , `VRA_BG`
 
 
 ### Request Blueprint

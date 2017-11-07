@@ -5,10 +5,11 @@ $LOAD_PATH.unshift(libdir) unless $LOAD_PATH.include?(libdir)
 require 'VMWConfig'
 require 'irb'
 
-# Request the vRA 'ubuntu' blueprint
-businessGroup = "Development"
-numCpus = 1
-customizationSpec = "Linux"
+unless ENV["VRA_BG"] 
+  puts "Business Group required as environment variable: VRA_BG"
+  exit 1
+end
+businessGroup = ENV["VRA_BG"]
 
 if ARGV[0]
   blueprintName = ARGV[0]
@@ -56,7 +57,6 @@ begin
 
   # Modify the template parameters
   # // data/centos/data/cpu
-  template['data']['vSphere__vCenter__Machine_1']['data']['cpu'] = 1
   # template['data']['vSphere__vCenter__Machine_1']['data']['guest_customization_specification'] = customizationSpec
   template['data']['vSphere__vCenter__Machine_1']['data']['description'] = "Requested via API"
 
@@ -77,7 +77,7 @@ begin
   request = payload.doc
   requestId = request["id"]
 
-  print "RequestId: %s blueprint %s with %d CPU\n" % [requestId, blueprintName, numCpus]
+  puts "RequestId: %s blueprint %s" % [requestId, blueprintName]
 
   requestState = nil
   while not ["SUCCESSFUL", "FAILED"].include? requestState

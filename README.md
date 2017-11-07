@@ -2,6 +2,7 @@
 
 ### Requirements
 
+- ruby 2.2+
 - sudo gem install rest-client
 - sudo gem install nokogiri
 - The following environment variables are required:

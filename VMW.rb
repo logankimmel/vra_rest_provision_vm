@@ -11,8 +11,8 @@ module VMW
 
 class API
   
-  @@username = 'admin'
-  @@password = 'admin'
+  @@username = 'fritz'
+  @@password = 'VMware1!'
   @@tenant = 'qe'
 
   @@apiKey = nil

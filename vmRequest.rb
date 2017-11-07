@@ -3,10 +3,11 @@ libdir = File.dirname(__FILE__)
 $LOAD_PATH.unshift(libdir) unless $LOAD_PATH.include?(libdir)
 
 require 'VMWConfig'
+require 'irb'
 
 # Request the vRA 'centos' blueprint
-blueprintName = "centos"
-businessGroup = "Ford"
+blueprintName = "ubuntu"
+businessGroup = "Development"
 numCpus = 1
 customizationSpec = "Linux"
 
@@ -28,7 +29,6 @@ begin
   response = VMW::API::sign {
     RestClient.get url, :content_type => :json, :params => {:$filter => "name eq '%s'" % blueprintName}
   }
-
   payload = VMW::Payload.from_json(response)
 
   # Retrieve the blueprint id
@@ -58,9 +58,9 @@ begin
 
   # Modify the template parameters
   # // data/centos/data/cpu
-  template['data']['centos']['data']['cpu'] = 1
-  template['data']['centos']['data']['guest_customization_specification'] = customizationSpec
-  template['data']['centos']['data']['description'] = "Requested via API"
+  template['data']['vSphere__vCenter__Machine_1']['data']['cpu'] = 1
+  # template['data']['vSphere__vCenter__Machine_1']['data']['guest_customization_specification'] = customizationSpec
+  template['data']['vSphere__vCenter__Machine_1']['data']['description'] = "Requested via API"
 
   # Save it for inspection
   if VMW::API::debug
@@ -128,35 +128,35 @@ begin
     end
   end
 
-  # Now get specific resource
-  if resourceId
-    url = VMW::API::URI("/catalog-service/api/consumer/resources/%s" % resourceId)
+  # # Now get specific resource
+  # if resourceId
+  #   url = VMW::API::URI("/catalog-service/api/consumer/resources/%s" % resourceId)
 
-    while ipAddress.nil? or ipAddress.empty?
-      sleep(30)
+  #   while ipAddress.nil? or ipAddress.empty?
+  #     sleep(30)
 
-      response = VMW::API::sign {
-        RestClient.get url, :content_type => :json
-      }
+  #     response = VMW::API::sign {
+  #       RestClient.get url, :content_type => :json
+  #     }
 
-      payload = VMW::Payload.from_json(response)
-      payload.save_json("catalog_resource_%s.json" % resourceId)
+  #     payload = VMW::Payload.from_json(response)
+  #     payload.save_json("catalog_resource_%s.json" % resourceId)
 
-      # Get the IP Address
-      payload.doc['resourceData']['entries'].each do |item|
-        if item['key'] == 'ip_address'
-          ipAddress = item['value']['value']
-          print "IP Address: %s\n" % ipAddress
-        end
-        if item['key'] == 'MachineName'
-          print "Name: %s\n" % item['value']['value']
-        end
-      end
-    end
-  end
+  #     # Get the IP Address
+  #     payload.doc['resourceData']['entries'].each do |item|
+  #       if item['key'] == 'ip_address'
+  #         ipAddress = item['value']['value']
+  #         print "IP Address: %s\n" % ipAddress
+  #       end
+  #       if item['key'] == 'MachineName'
+  #         print "Name: %s\n" % item['value']['value']
+  #       end
+  #     end
+  #   end
+  # end
 
-  # Write results to a file
-  File.open("ip_address", "w").write(ip_address)
+  # # Write results to a file
+  # File.open("ip_address", "w").write(ip_address)
 
 rescue RestClient::Exception => e
   print "Got exception with status: %d\n" % e.response.code

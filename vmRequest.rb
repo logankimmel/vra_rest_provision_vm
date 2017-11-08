@@ -3,7 +3,6 @@ libdir = File.dirname(__FILE__)
 $LOAD_PATH.unshift(libdir) unless $LOAD_PATH.include?(libdir)
 
 require 'VMWConfig'
-require 'irb'
 
 unless ENV["VRA_BG"] 
   puts "Business Group required as environment variable: VRA_BG"
@@ -54,11 +53,6 @@ begin
 
   payload = VMW::Payload.from_json(response)
   template = payload.doc
-
-  # Modify the template parameters
-  # // data/centos/data/cpu
-  # template['data']['vSphere__vCenter__Machine_1']['data']['guest_customization_specification'] = customizationSpec
-  template['data']['vSphere__vCenter__Machine_1']['data']['description'] = "Requested via API"
 
   # Save it for inspection
   if VMW::API::debug

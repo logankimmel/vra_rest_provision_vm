@@ -71,7 +71,8 @@ func setVars() {
 	}
 }
 
-func getToken(client *http.Client) string {
+func getToken(client *http.Client, f *os.File) string {
+	f.WriteString("Retrieving token\n")
 	authURL := VraVars.baseURI + "/identity/api/tokens"
 	postData := &AuthData{VraVars.username, VraVars.password, VraVars.tenant}
 	b, _ := json.Marshal(postData)
@@ -97,7 +98,8 @@ func getToken(client *http.Client) string {
 	return iface["id"].(string)
 }
 
-func getTemplate(client *http.Client, auth string, catalogID string, businessGroupID string) []byte {
+func getTemplate(client *http.Client, auth string, catalogID string, businessGroupID string, f *os.File) []byte {
+	fmt.Println("Getting template")
 	templateURL := fmt.Sprintf("%s/catalog-service/api/consumer/entitledCatalogItems/%s/requests/template", VraVars.baseURI, catalogID)
 	req, _ := http.NewRequest("GET", templateURL, nil)
 	req.Header.Add("Authorization", auth)
@@ -106,17 +108,23 @@ func getTemplate(client *http.Client, auth string, catalogID string, businessGro
 	req.URL.RawQuery = q.Encode()
 	resp, err := client.Do(req)
 	if err != nil {
+		fmt.Println("Error getting template")
 		panic(err)
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		f.WriteString("Error reading template response")
+		fmt.Println("Error reading template response")
 		panic(err)
 	}
+	f.WriteString(string(body))
 	return body
 }
 
-func invokeTemplate(client *http.Client, auth string, template []byte, catalogID string) string {
+func invokeTemplate(client *http.Client, auth string, template []byte, catalogID string, f *os.File) string {
+	fmt.Println("Invoking template request")
+	f.WriteString("Invoking template request\n")
 	templateURL := fmt.Sprintf("%s/catalog-service/api/consumer/entitledCatalogItems/%s/requests", VraVars.baseURI, catalogID)
 	req, err := http.NewRequest("POST", templateURL, bytes.NewBuffer(template))
 	req.Header.Add("Authorization", auth)
@@ -132,6 +140,7 @@ func invokeTemplate(client *http.Client, auth string, template []byte, catalogID
 	if err != nil {
 		panic(err)
 	}
+	f.WriteString(string(body))
 	var d interface{}
 	if err := json.Unmarshal(body, &d); err != nil {
 		panic(err)
@@ -227,8 +236,9 @@ func main() {
 	}
 	defer f.Close()
 	client := getClient()
-	token := getToken(client)
+	token := getToken(client, f)
 	auth := "Bearer " + token
+	f.WriteString("Getting entitled catalog items\n")
 	catalogURL := VraVars.baseURI + "/catalog-service/api/consumer/entitledCatalogItemViews"
 	req, _ := http.NewRequest("GET", catalogURL, nil)
 	req.Header.Add("Authorization", auth)
@@ -237,18 +247,29 @@ func main() {
 	req.URL.RawQuery = q.Encode()
 	resp, err := client.Do(req)
 	if err != nil {
+		f.WriteString(fmt.Sprintf("Error getting catalog: %s\n", err))
 		panic(err)
 	}
+	fmt.Println(resp)
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		f.WriteString(fmt.Sprintf("Error reading catalog response: %s\n", err))
 		panic(err)
 	}
+	f.WriteString(string(body))
 	var d interface{}
 	if err := json.Unmarshal(body, &d); err != nil {
+		f.WriteString(fmt.Sprintf("Error unmarshalling catalog response: %s\n", err))
 		panic(err)
 	}
 	iface := d.(map[string]interface{})
+	if len(iface["content"].([]interface{})) < 1 {
+		st := fmt.Sprintf("Blueprint: %s could not be found\n", VraVars.blueprint)
+		fmt.Print(st)
+		f.WriteString(st)
+		os.Exit(1)
+	}
 	blueprint := iface["content"].([]interface{})[0]
 	catalogItem := blueprint.(map[string]interface{})
 	catalogID := catalogItem["catalogItemId"].(string)
@@ -270,10 +291,10 @@ func main() {
 	}
 
 	// Retrieve template for this blueprint
-	template := getTemplate(client, auth, catalogID, businessGroupID)
+	template := getTemplate(client, auth, catalogID, businessGroupID, f)
 
 	// invoke Template
-	requestID := invokeTemplate(client, auth, template, catalogID)
+	requestID := invokeTemplate(client, auth, template, catalogID, f)
 	str = fmt.Sprintf("Request ID: %s, Blueprint %s\n", requestID, VraVars.blueprint)
 	f.WriteString(str)
 	fmt.Print(str)

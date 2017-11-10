@@ -1,1 +1,3 @@
 payloads/**
+output_create.log
+output_destroy.log
